@@ -3,6 +3,12 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUTPUT_ICNS="$ROOT_DIR/Resources/AppIcon.icns"
+INPUT_PNG="${1:-$ROOT_DIR/docs/icon.png}"
+
+if [ ! -f "$INPUT_PNG" ]; then
+  echo "icon source not found: $INPUT_PNG" >&2
+  exit 1
+fi
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
@@ -12,7 +18,7 @@ SOURCE_PNG="$TMP_DIR/icon_1024.png"
 
 mkdir -p "$ICONSET"
 
-swift "$ROOT_DIR/Scripts/make_icon.swift" "$SOURCE_PNG"
+sips -z 1024 1024 "$INPUT_PNG" --out "$SOURCE_PNG" >/dev/null
 
 sizes=(16 32 32 64 128 256 256 512 512 1024)
 names=(
