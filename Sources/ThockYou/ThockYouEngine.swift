@@ -1,7 +1,7 @@
 @preconcurrency import AVFoundation
 import Foundation
 
-final class ThockYouEngine {
+final class ThockYouEngine: @unchecked Sendable {
     private let engine = AVAudioEngine()
     private let format: AVAudioFormat
     private var players: [AVAudioPlayerNode] = []
@@ -10,6 +10,7 @@ final class ThockYouEngine {
     private var fallbackKeyBuffers: [AVAudioPCMBuffer] = []
     private var fallbackKindBuffers: [AVAudioPCMBuffer] = []
     private var nextPlayerIndex = 0
+    private var configurationChangeObserver: NSObjectProtocol?
 
     var volume: Float = 0.55 {
         didSet {
@@ -32,6 +33,20 @@ final class ThockYouEngine {
         engine.mainMixerNode.outputVolume = volume
         engine.prepare()
         start()
+
+        configurationChangeObserver = NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange,
+            object: engine,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleConfigurationChange()
+        }
+    }
+
+    deinit {
+        if let observer = configurationChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     func start() {
@@ -40,9 +55,27 @@ final class ThockYouEngine {
         }
     }
 
+    func restart() {
+        players.forEach { $0.stop() }
+        engine.stop()
+        engine.reset()
+        engine.prepare()
+        try? engine.start()
+    }
+
     func stop() {
         players.forEach { $0.stop() }
         engine.stop()
+    }
+
+    private func handleConfigurationChange() {
+        // AVAudioEngine stops itself on configuration changes (sleep/wake, output device switch).
+        // Reconnect players and restart so playback resumes.
+        for player in players {
+            engine.connect(player, to: engine.mainMixerNode, format: format)
+        }
+        engine.prepare()
+        try? engine.start()
     }
 
     func reload(pack: SoundPack, pitchVariation: Bool) {

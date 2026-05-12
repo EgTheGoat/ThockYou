@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var settingsWindowController: SettingsWindowController?
     private var permissionPollingTimer: Timer?
     private var cancellables = Set<AnyCancellable>()
+    private var wakeObserver: NSObjectProtocol?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         ProcessInfo.processInfo.disableAutomaticTermination("ThockYou keeps running to play typing sounds.")
@@ -17,6 +18,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         audioEngine.volume = Float(state.volume)
         reloadAudioPack()
+
+        wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.audioEngine.restart()
+            }
+        }
 
         let monitor = KeyboardMonitor { [weak self] keyCode in
             if Thread.isMainThread {
