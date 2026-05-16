@@ -62,7 +62,7 @@ open .build/ThockYou.app
 
 ThockYou needs the **Privacy & Security → Accessibility** permission in System Settings to receive global key-down events from every app. Only key-down event metadata is read — typed characters are never stored or transmitted.
 
-After granting permission, click **Recheck** in the settings window or relaunch the app. If older builds named `Keysound` or `Thockyou` remain in the Accessibility list, remove them and authorize the new `ThockYou` entry.
+After granting permission, click **Recheck** in the settings window or relaunch the app. If an older build named `Thockyou` remains in the Accessibility list, remove it and authorize the new `ThockYou` entry.
 
 ## Custom sound packs
 

@@ -10,7 +10,6 @@ fi
 
 killall ThockYou >/dev/null 2>&1 || true
 killall Thockyou >/dev/null 2>&1 || true
-killall Keysound >/dev/null 2>&1 || true
 sleep 0.5
 
 open "$APP_DIR"
